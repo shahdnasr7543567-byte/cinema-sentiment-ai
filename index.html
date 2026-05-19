@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 ناقد الأفلام الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --card: #13132a;
+    --card2: #0f0f22;
+    --border: rgba(255,255,255,0.07);
+    --accent: #ff4d4d;
+    --accent2: #ff8c42;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --text: #f0f0f0;
+    --muted: #8888aa;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 28px 20px;
+    background-image: radial-gradient(ellipse at 20% 20%, rgba(255,77,77,0.07) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 80%, rgba(255,140,66,0.05) 0%, transparent 60%);
+  }
+  h1.site-title { text-align:center; color:var(--text); font-size:1.9rem; font-weight:900; margin-bottom:28px; }
+  h1.site-title span { color:var(--accent); }
+  .container { max-width:1260px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .card { background:var(--card); border-radius:28px; padding:26px; border:1px solid var(--border); box-shadow:0 20px 50px rgba(0,0,0,0.4); }
+  .card-title { color:var(--text); font-size:1.35rem; font-weight:700; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+  .badge { background:var(--accent); color:white; padding:3px 11px; border-radius:30px; font-size:0.65rem; font-weight:700; }
+  textarea { width:100%; padding:15px 18px; background:var(--card2); border:1px solid var(--border); border-radius:18px; color:var(--text); font-size:1rem; font-family:'Cairo',sans-serif; resize:vertical; min-height:120px; transition:border-color 0.2s; }
+  textarea:focus { outline:none; border-color:var(--accent); }
+  .btn-row { display:flex; gap:12px; margin:14px 0; flex-wrap:wrap; }
+  button { background:linear-gradient(110deg,var(--accent),var(--accent2)); border:none; padding:11px 26px; border-radius:30px; font-weight:700; color:white; font-size:0.95rem; cursor:pointer; font-family:'Cairo',sans-serif; transition:opacity 0.2s,transform 0.15s; }
+  button:hover { opacity:0.88; transform:scale(0.97); }
+  button.secondary { background:rgba(255,255,255,0.07); border:1px solid var(--border); }
+  .result-box { background:var(--card2); border-radius:22px; padding:22px; margin-top:16px; text-align:center; display:none; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  .sentiment-label { font-size:2rem; font-weight:900; }
+  .positive { color:var(--green); }
+  .negative { color:var(--red); }
+  .conf-label { color:var(--muted); font-size:0.9rem; margin:10px 0 6px; }
+  .conf-bar { background:#1a1a2e; border-radius:30px; height:10px; overflow:hidden; }
+  .conf-fill { height:100%; border-radius:30px; transition:width 0.6s cubic-bezier(.4,0,.2,1); }
+  .chat-area { background:var(--card2); border-radius:22px; padding:16px; height:390px; overflow-y:auto; margin-bottom:14px; display:flex; flex-direction:column; gap:10px; scrollbar-width:thin; scrollbar-color:#2a2a3a transparent; }
+  .msg { display:flex; }
+  .msg.user { justify-content:flex-start; }
+  .msg.bot { justify-content:flex-end; }
+  .bubble { max-width:82%; padding:11px 16px; border-radius:20px; font-size:0.92rem; line-height:1.7; background:#1e1e35; color:var(--text); white-space:pre-wrap; word-break:break-word; }
+  .bubble a { color:var(--accent2); text-decoration:none; }
+  .bubble a:hover { text-decoration:underline; }
+  .msg.user .bubble { background:linear-gradient(110deg,var(--accent),var(--accent2)); color:white; }
+  .typing { display:flex; gap:5px; align-items:center; padding:10px 16px; background:#1e1e35; border-radius:20px; width:fit-content; }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--muted); animation:bounce 1.2s infinite; }
+  .dot:nth-child(2){animation-delay:0.2s} .dot:nth-child(3){animation-delay:0.4s}
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .chat-input-row { display:flex; gap:10px; }
+  .chat-input-row input { flex:1; padding:12px 18px; background:var(--card2); border:1px solid var(--border); border-radius:30px; color:var(--text); font-size:0.95rem; font-family:'Cairo',sans-serif; transition:border-color 0.2s; }
+  .chat-input-row input:focus { outline:none; border-color:var(--accent); }
+  .chat-input-row button { padding:12px 22px; }
+  .quick-btns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .quick-btn { background:rgba(255,77,77,0.12); border:1px solid rgba(255,77,77,0.3); color:var(--text); padding:6px 14px; border-radius:20px; font-size:0.8rem; cursor:pointer; font-family:'Cairo',sans-serif; transition:background 0.2s; }
+  .quick-btn:hover { background:rgba(255,77,77,0.25); transform:none; }
+  footer { text-align:center; margin-top:28px; color:var(--muted); font-size:0.8rem; }
+  @media(max-width:860px){.container{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1 class="site-title">🎬 ناقد الأفلام <span>الذكي</span></h1>
+<div class="container">
+
+  <div class="card">
+    <div class="card-title">🎭 تحليل المشاعر</div>
+    <textarea id="review" placeholder="اكتب رأيك في فيلم بالعربي أو الإنجليزي…&#10;مثال: الفيلم كان رائع جداً والممثلين أبدعوا"></textarea>
+    <div class="btn-row">
+      <button onclick="analyze()">🔍 حلل المشاعر</button>
+      <button class="secondary" onclick="clearReview()">🗑️ مسح</button>
+    </div>
+    <div id="sentimentResult" class="result-box"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🤖 شات بوت سينما <span class="badge">ذكي</span></div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="quickSend('اقترح فيلم أكشن')">🔥 أكشن</button>
+      <button class="quick-btn" onclick="quickSend('اقترح فيلم دراما')">🎭 دراما</button>
+      <button class="quick-btn" onclick="quickSend('اقترح فيلم رعب')">👻 رعب</button>
+      <button class="quick-btn" onclick="quickSend('اقترح فيلم خيال علمي')">🚀 خيال علمي</button>
+      <button class="quick-btn" onclick="quickSend('اقترح فيلم رومانسي')">❤️ رومانسي</button>
+      <button class="quick-btn" onclick="quickSend('اقترح فيلم كوميدي')">😂 كوميدي</button>
+    </div>
+    <div id="chatMessages" class="chat-area">
+      <div class="msg bot"><div class="bubble">🎬 أهلاً! اسألني عن أي فيلم أو اطلب اقتراحات حسب النوع 😊
+اضغط على الأزرار السريعة فوق أو اكتب سؤالك!</div></div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="مثال: اقترح فيلم أكشن أو عن Inception…" onkeypress="if(event.key==='Enter') sendChat()">
+      <button onclick="sendChat()">إرسال</button>
+    </div>
+  </div>
+
+</div>
+<footer>🧠 يعمل بالذكاء الاصطناعي — GloVe + Neural Network</footer>
+
+<script>
+// ========== قاعدة بيانات الأفلام ==========
+const movies = {
+  'inception': { title:'Inception (2010)', desc:'فيلم عن سرقة الأسرار عبر عالم الأحلام داخل الأحلام', director:'كريستوفر نولان', rating:8.8, url:'https://www.themoviedb.org/movie/27205-inception' },
+  'titanic': { title:'Titanic (1997)', desc:'قصة حب على متن السفينة الشهيرة', director:'جيمس كاميرون', rating:7.9, url:'https://www.themoviedb.org/movie/597-titanic' },
+  'godfather': { title:'The Godfather (1972)', desc:'ملحمة الجريمة المنظمة والعائلة', director:'فرانسيس فورد كوبولا', rating:9.2, url:'https://www.themoviedb.org/movie/238-the-godfather' },
+  'matrix': { title:'The Matrix (1999)', desc:'هاكر يكتشف الحقيقة المخفية عن الواقع', director:'واشوفسكي', rating:8.7, url:'https://www.themoviedb.org/movie/603-the-matrix' },
+  'interstellar': { title:'Interstellar (2014)', desc:'رحلة عبر الثقوب الدودية بحثاً عن مستقبل البشرية', director:'كريستوفر نولان', rating:8.6, url:'https://www.themoviedb.org/movie/157336-interstellar' },
+  'parasite': { title:'Parasite (2019)', desc:'دراما كورية عن الطبقية والجشع', director:'بونج جون-هو', rating:8.6, url:'https://www.themoviedb.org/movie/496243-parasite' },
+  'dark knight': { title:'The Dark Knight (2008)', desc:'باتمان في مواجهة الجوكر في ملحمة مذهلة', director:'كريستوفر نولان', rating:9.0, url:'https://www.themoviedb.org/movie/155-the-dark-knight' },
+  'shawshank': { title:'The Shawshank Redemption (1994)', desc:'قصة صداقة وأمل داخل السجن', director:'فرانك داربونت', rating:9.3, url:'https://www.themoviedb.org/movie/278-the-shawshank-redemption' },
+  'forrest gump': { title:'Forrest Gump (1994)', desc:'رجل بسيط يعيش قصة حياة استثنائية', director:'روبرت زيميكيس', rating:8.8, url:'https://www.themoviedb.org/movie/13-forrest-gump' },
+  'joker': { title:'Joker (2019)', desc:'أصل قصة أشهر مجرم في تاريخ السينما', director:'تود فيليبس', rating:8.4, url:'https://www.themoviedb.org/movie/475557-joker' }
+};
+
+const genres = {
+  'أكشن': [
+    { title:'John Wick', year:2014, url:'https://www.themoviedb.org/movie/245891-john-wick', desc:'قاتل محترف يعود للانتقام' },
+    { title:'Mad Max: Fury Road', year:2015, url:'https://www.themoviedb.org/movie/76341-mad-max-fury-road', desc:'ملحمة أكشن في عالم ما بعد الكارثة' },
+    { title:'Die Hard', year:1988, url:'https://www.themoviedb.org/movie/1576-die-hard', desc:'ضابط شرطة وحده في مبنى مليء بالإرهابيين' },
+    { title:'Gladiator', year:2000, url:'https://www.themoviedb.org/movie/98-gladiator', desc:'جنرال روماني يصبح مصارعاً للانتقام' }
+  ],
+  'دراما': [
+    { title:'The Shawshank Redemption', year:1994, url:'https://www.themoviedb.org/movie/278-the-shawshank-redemption', desc:'⭐ 9.3 — قصة أمل وصداقة في السجن' },
+    { title:'Forrest Gump', year:1994, url:'https://www.themoviedb.org/movie/13-forrest-gump', desc:'⭐ 8.8 — حياة رجل بسيط بأحداث استثنائية' },
+    { title:'Schindler\'s List', year:1993, url:'https://www.themoviedb.org/movie/424-schindler-s-list', desc:'⭐ 8.9 — قصة إنسانية في زمن الهولوكوست' }
+  ],
+  'رعب': [
+    { title:'The Conjuring', year:2013, url:'https://www.themoviedb.org/movie/138843-the-conjuring', desc:'قصة مسكونة حقيقية مرعبة' },
+    { title:'Hereditary', year:2018, url:'https://www.themoviedb.org/movie/490132-hereditary', desc:'عائلة تكتشف أسراراً مرعبة بعد وفاة الجدة' },
+    { title:'Get Out', year:2017, url:'https://www.themoviedb.org/movie/419430-get-out', desc:'رعب نفسي وانتقاد اجتماعي مذهل' },
+    { title:'A Quiet Place', year:2018, url:'https://www.themoviedb.org/movie/447332-a-quiet-place', desc:'عائلة تعيش في صمت تام خوفاً من وحوش عمياء' }
+  ],
+  'خيال علمي': [
+    { title:'Inception', year:2010, url:'https://www.themoviedb.org/movie/27205-inception', desc:'⭐ 8.8 — سرقة الأسرار من الأحلام' },
+    { title:'Interstellar', year:2014, url:'https://www.themoviedb.org/movie/157336-interstellar', desc:'⭐ 8.6 — رحلة عبر الفضاء والثقوب الدودية' },
+    { title:'The Matrix', year:1999, url:'https://www.themoviedb.org/movie/603-the-matrix', desc:'⭐ 8.7 — هل الواقع حقيقي؟' },
+    { title:'Dune', year:2021, url:'https://www.themoviedb.org/movie/438631-dune', desc:'ملحمة خيال علمي في عالم الصحراء' }
+  ],
+  'رومانسي': [
+    { title:'La La Land', year:2016, url:'https://www.themoviedb.org/movie/313369-la-la-land', desc:'قصة حب بين موسيقي وممثلة في لوس أنجلوس' },
+    { title:'The Notebook', year:2004, url:'https://www.themoviedb.org/movie/11096-the-notebook', desc:'قصة حب لا تنسى على مر السنين' },
+    { title:'Eternal Sunshine', year:2004, url:'https://www.themoviedb.org/movie/38-eternal-sunshine-of-the-spotless-mind', desc:'ماذا لو محوت ذكريات من تحب؟' }
+  ],
+  'كوميدي': [
+    { title:'The Grand Budapest Hotel', year:2014, url:'https://www.themoviedb.org/movie/120467-the-grand-budapest-hotel', desc:'مغامرة كوميدية في فندق أوروبي فاخر' },
+    { title:'Superbad', year:2007, url:'https://www.themoviedb.org/movie/10022-superbad', desc:'كوميديا شباب古典ية لا تُنسى' },
+    { title:'The Hangover', year:2009, url:'https://www.themoviedb.org/movie/18785-the-hangover', desc:'ليلة عيد ميلاد تتحول لكارثة مضحكة' }
+  ]
+};
+
+// ========== تحليل المشاعر ==========
+function sentimentLocal(text) {
+  const t = text.toLowerCase();
+  const pos = ['رائع','ممتاز','أبدع','جميل','مذهل','رهيب','أحسن','أجمل','أفضل','حلو','تحفة','عظيم','love','amazing','great','excellent','wonderful','fantastic','brilliant','best','good','perfect','awesome','enjoyed'];
+  const neg = ['سيء','ممل','مخيب','أسوأ','فاشل','مزعج','رديء','ضعيف','مضيعة','boring','terrible','awful','waste','bad','horrible','worst','disappointing','poor','hated'];
+  let p=0, n=0;
+  pos.forEach(w => { if(t.includes(w)) p++; });
+  neg.forEach(w => { if(t.includes(w)) n++; });
+  if(p===0 && n===0) return { sentiment:'Neutral', confidence:0.52 };
+  const total = p + n;
+  const conf = p / total;
+  return conf >= 0.5
+    ? { sentiment:'Positive', confidence: Math.min(0.97, 0.6 + conf*0.37) }
+    : { sentiment:'Negative', confidence: Math.min(0.97, 0.6 + (1-conf)*0.37) };
+}
+
+function analyze() {
+  const review = document.getElementById('review').value.trim();
+  if (!review) { alert('✏️ اكتب رأيك أولاً'); return; }
+  const box = document.getElementById('sentimentResult');
+  box.style.display = 'block';
+  box.innerHTML = `<div style="color:var(--muted)">🔄 جاري التحليل…</div>`;
+  setTimeout(() => {
+    const r = sentimentLocal(review);
+    const isPos = r.sentiment === 'Positive';
+    const isNeu = r.sentiment === 'Neutral';
+    const emoji = isPos ? '😍' : isNeu ? '😐' : '😞';
+    const label = isPos ? 'إيجابي' : isNeu ? 'محايد' : 'سلبي';
+    const cls   = isPos ? 'positive' : isNeu ? '' : 'negative';
+    const color = isPos ? 'var(--green)' : isNeu ? '#aaa' : 'var(--red)';
+    const pct   = Math.round(r.confidence * 100);
+    box.innerHTML = `
+      <div class="sentiment-label ${cls}">${emoji} ${label} ${emoji}</div>
+      <div class="conf-label">نسبة الثقة: <strong>${pct}%</strong></div>
+      <div class="conf-bar"><div class="conf-fill" style="width:${pct}%;background:${color}"></div></div>
+    `;
+  }, 600);
+}
+
+function clearReview() {
+  document.getElementById('review').value = '';
+  document.getElementById('sentimentResult').style.display = 'none';
+}
+
+// ========== شات بوت ==========
+function addMessage(html, sender) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `msg ${sender}`;
+  div.innerHTML = `<div class="bubble">${html}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if(t) t.remove();
+}
+
+function quickSend(text) {
+  document.getElementById('chatInput').value = text;
+  sendChat();
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  addMessage(msg, 'user');
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const reply = smartReply(msg);
+    addMessage(reply, 'bot');
+  }, 700);
+}
+
+function movieCard(m) {
+  return `• <a href="${m.url}" target="_blank"><strong>${m.title}</strong> (${m.year})</a>\n  ${m.desc}`;
+}
+
+function smartReply(msg) {
+  const m = msg.toLowerCase();
+
+  // بحث عن فيلم معين
+  for (const [key, info] of Object.entries(movies)) {
+    if (m.includes(key)) {
+      return `🎬 <strong>${info.title}</strong>\n📝 ${info.desc}\n🎭 المخرج: ${info.director}\n⭐ التقييم: ${info.rating}/10\n🔗 <a href="${info.url}" target="_blank">شوف على TMDB</a>`;
+    }
+  }
+
+  // بحث حسب النوع
+  for (const [genre, list] of Object.entries(genres)) {
+    if (m.includes(genre)) {
+      let reply = `🎬 <strong>أفلام ${genre} مختارة لك:</strong>\n\n`;
+      reply += list.map(movieCard).join('\n\n');
+      return reply;
+    }
+  }
+
+  // اقتراح عشوائي
+  if (m.includes('اقترح') || m.includes('recommend') || m.includes('suggest') || m.includes('فيلم')) {
+    const all = Object.values(movies);
+    const r = all[Math.floor(Math.random() * all.length)];
+    return `🎲 اقتراح عشوائي:\n🎬 <strong>${r.title}</strong>\n📝 ${r.desc}\n⭐ ${r.rating}/10\n🔗 <a href="${r.url}" target="_blank">شوف على TMDB</a>`;
+  }
+
+  // ترحيب
+  if (m.includes('مرحب') || m.includes('هلا') || m.includes('سلام') || m.includes('hello') || m.includes('hi')) {
+    return '👋 أهلاً وسهلاً! اسألني عن أي فيلم أو اطلب اقتراحات:\n• اكتب اسم فيلم زي "Inception"\n• أو اطلب نوع زي "اقترح فيلم أكشن"';
+  }
+
+  // شكر
+  if (m.includes('شكر') || m.includes('thank')) return '😊 العفو! أنا هنا دايماً لخدمتك 🎬';
+
+  // مساعدة
+  if (m.includes('مساعد') || m.includes('help')) {
+    return '🔍 <strong>إيه اللي أقدر أعمله:</strong>\n• اسألني عن فيلم: "Inception إيه قصته؟"\n• اطلب نوع: "اقترح فيلم رعب"\n• أو اضغط الأزرار السريعة فوق 👆';
+  }
+
+  return '🎬 مش فاهم سؤالك تماماً!\nجرب:\n• "اقترح فيلم أكشن"\n• "عن فيلم Inception"\n• أو اضغط الأزرار السريعة فوق 👆';
+}
+</script>
+</body>
+</html>
