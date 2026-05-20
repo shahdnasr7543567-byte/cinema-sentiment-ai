@@ -160,29 +160,44 @@ const genres = {
 
 // ========== تحليل المشاعر ==========
 function sentimentLocal(text) {
-  const original = text.toLowerCase();
+  let t = ' ' + text.toLowerCase() + ' ';
+
+  const negPattern = /\b(not|never|isn't|wasn't|don't|didn't|doesn't|won't|hardly|barely)\s+(\w+)/g;
+
+  // كل كلمة بعد نفي → احذفيها من النص الأصلي وحطي عكسها
+  const negated = [];
+  t = t.replace(negPattern, (match, neg, word) => {
+    negated.push(word);
+    // لو الكلمة سلبية وجاي بعد نفي → إيجابي
+    // لو الكلمة إيجابية وجاي بعد نفي → سلبي
+    return ' __NEGATED_' + word + '__ ';
+  });
 
   const posWords = ['رائع','ممتاز','أبدع','جميل','مذهل','رهيب','أحسن','أجمل','أفضل','حلو','تحفة','عظيم','love','amazing','great','excellent','wonderful','fantastic','brilliant','best','good','perfect','awesome','enjoyed'];
   const negWords = ['سيء','ممل','مخيب','أسوأ','فاشل','مزعج','رديء','ضعيف','مضيعة','boring','terrible','awful','waste','bad','horrible','worst','disappointing','poor','hated'];
-  const negations = ['not','never','isn\'t','wasn\'t','don\'t','didn\'t','doesn\'t','won\'t','hardly','barely'];
 
-  // قسّم النص لكلمات
-  const words = original.split(/\s+/);
   let p = 0, n = 0;
 
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i].replace(/[^a-zأ-ي]/g, '');
-    const prevWord = i > 0 ? words[i-1].replace(/[^a-zأ-ي']/g, '') : '';
-    const isNegated = negations.includes(prevWord);
+  // احسب الكلمات العادية (مش منفية)
+  posWords.forEach(w => {
+    const re = new RegExp('\\b' + w + '\\b', 'g');
+    const matches = t.match(re);
+    if (matches) p += matches.length;
+  });
+  negWords.forEach(w => {
+    const re = new RegExp('\\b' + w + '\\b', 'g');
+    const matches = t.match(re);
+    if (matches) n += matches.length;
+  });
 
-    if (posWords.includes(word)) {
-      // لو قبلها نفي → سلبي، لو لأ → إيجابي
-      isNegated ? n++ : p++;
-    } else if (negWords.includes(word)) {
-      // لو قبلها نفي → إيجابي، لو لأ → سلبي
-      isNegated ? p++ : n++;
-    }
-  }
+  // احسب الكلمات المنفية وعكس تأثيرها
+  negated.forEach(w => {
+    if (posWords.includes(w)) { p--; n++; } // not good → سلبي
+    if (negWords.includes(w)) { n--; p++; } // not bad → إيجابي
+  });
+
+  p = Math.max(0, p);
+  n = Math.max(0, n);
 
   if (p === 0 && n === 0) return { sentiment:'Neutral', confidence:0.52 };
   const total = p + n;
