@@ -160,29 +160,31 @@ const genres = {
 
 // ========== تحليل المشاعر ==========
 function sentimentLocal(text) {
-  let t = text.toLowerCase();
+  const original = text.toLowerCase();
 
-  // معالجة الـ negation — "not bad" → "not_bad" علشان منعدش bad كسلبي
-  const negations = ['not','never',"isn't","wasn't","don't","didn't","doesn't","won't","hardly","barely"];
-  negations.forEach(neg => {
-    t = t.replace(new RegExp(neg + '\\s+(\\w+)', 'g'), (match, word) => 'not_' + word);
-  });
+  const posWords = ['رائع','ممتاز','أبدع','جميل','مذهل','رهيب','أحسن','أجمل','أفضل','حلو','تحفة','عظيم','love','amazing','great','excellent','wonderful','fantastic','brilliant','best','good','perfect','awesome','enjoyed'];
+  const negWords = ['سيء','ممل','مخيب','أسوأ','فاشل','مزعج','رديء','ضعيف','مضيعة','boring','terrible','awful','waste','bad','horrible','worst','disappointing','poor','hated'];
+  const negations = ['not','never','isn\'t','wasn\'t','don\'t','didn\'t','doesn\'t','won\'t','hardly','barely'];
 
-  const pos = [
-    'رائع','ممتاز','أبدع','جميل','مذهل','رهيب','أحسن','أجمل','أفضل','حلو','تحفة','عظيم',
-    'love','amazing','great','excellent','wonderful','fantastic','brilliant','best','good','perfect','awesome','enjoyed',
-    'not_bad','not_boring','not_terrible','not_awful','not_disappointing','not_waste','not_horrible','not_worst','not_poor'
-  ];
-  const neg = [
-    'سيء','ممل','مخيب','أسوأ','فاشل','مزعج','رديء','ضعيف','مضيعة',
-    'boring','terrible','awful','waste','bad','horrible','worst','disappointing','poor','hated',
-    'not_good','not_great','not_amazing','not_wonderful','not_love','not_excellent','not_fantastic','not_best'
-  ];
+  // قسّم النص لكلمات
+  const words = original.split(/\s+/);
+  let p = 0, n = 0;
 
-  let p=0, n=0;
-  pos.forEach(w => { if(t.includes(w)) p++; });
-  neg.forEach(w => { if(t.includes(w)) n++; });
-  if(p===0 && n===0) return { sentiment:'Neutral', confidence:0.52 };
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i].replace(/[^a-zأ-ي]/g, '');
+    const prevWord = i > 0 ? words[i-1].replace(/[^a-zأ-ي']/g, '') : '';
+    const isNegated = negations.includes(prevWord);
+
+    if (posWords.includes(word)) {
+      // لو قبلها نفي → سلبي، لو لأ → إيجابي
+      isNegated ? n++ : p++;
+    } else if (negWords.includes(word)) {
+      // لو قبلها نفي → إيجابي، لو لأ → سلبي
+      isNegated ? p++ : n++;
+    }
+  }
+
+  if (p === 0 && n === 0) return { sentiment:'Neutral', confidence:0.52 };
   const total = p + n;
   const conf = p / total;
   return conf >= 0.5
