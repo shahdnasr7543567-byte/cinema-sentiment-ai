@@ -160,48 +160,32 @@ const genres = {
 
 // ========== تحليل المشاعر ==========
 function sentimentLocal(text) {
-  let t = ' ' + text.toLowerCase() + ' ';
-
-  const negPattern = /\b(not|never|isn't|wasn't|don't|didn't|doesn't|won't|hardly|barely)\s+(\w+)/g;
-
-  // كل كلمة بعد نفي → احذفيها من النص الأصلي وحطي عكسها
-  const negated = [];
-  t = t.replace(negPattern, (match, neg, word) => {
-    negated.push(word);
-    // لو الكلمة سلبية وجاي بعد نفي → إيجابي
-    // لو الكلمة إيجابية وجاي بعد نفي → سلبي
-    return ' __NEGATED_' + word + '__ ';
-  });
-
   const posWords = ['رائع','ممتاز','أبدع','جميل','مذهل','رهيب','أحسن','أجمل','أفضل','حلو','تحفة','عظيم','love','amazing','great','excellent','wonderful','fantastic','brilliant','best','good','perfect','awesome','enjoyed'];
   const negWords = ['سيء','ممل','مخيب','أسوأ','فاشل','مزعج','رديء','ضعيف','مضيعة','boring','terrible','awful','waste','bad','horrible','worst','disappointing','poor','hated'];
+  const negations = ['not','never','isnt','wasnt','dont','didnt','doesnt','wont','hardly','barely'];
+
+  // نظف النص ونقسمه لكلمات
+  const words = text.toLowerCase().replace(/['']/g, '').split(/\s+/);
 
   let p = 0, n = 0;
 
-  // احسب الكلمات العادية (مش منفية)
-  posWords.forEach(w => {
-    const re = new RegExp('\\b' + w + '\\b', 'g');
-    const matches = t.match(re);
-    if (matches) p += matches.length;
-  });
-  negWords.forEach(w => {
-    const re = new RegExp('\\b' + w + '\\b', 'g');
-    const matches = t.match(re);
-    if (matches) n += matches.length;
-  });
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i].replace(/[^a-zأ-ي]/g, '');
+    if (!w) continue;
 
-  // احسب الكلمات المنفية وعكس تأثيرها
-  negated.forEach(w => {
-    if (posWords.includes(w)) { p--; n++; } // not good → سلبي
-    if (negWords.includes(w)) { n--; p++; } // not bad → إيجابي
-  });
+    // هل الكلمة اللي قبلها نفي؟
+    const prev = i > 0 ? words[i-1].replace(/[^a-zأ-ي]/g, '') : '';
+    const negated = negations.includes(prev);
 
-  p = Math.max(0, p);
-  n = Math.max(0, n);
+    if (posWords.includes(w)) {
+      negated ? n++ : p++;
+    } else if (negWords.includes(w)) {
+      negated ? p++ : n++;
+    }
+  }
 
   if (p === 0 && n === 0) return { sentiment:'Neutral', confidence:0.52 };
-  const total = p + n;
-  const conf = p / total;
+  const conf = p / (p + n);
   return conf >= 0.5
     ? { sentiment:'Positive', confidence: Math.min(0.97, 0.6 + conf*0.37) }
     : { sentiment:'Negative', confidence: Math.min(0.97, 0.6 + (1-conf)*0.37) };
